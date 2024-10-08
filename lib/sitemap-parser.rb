@@ -2,6 +2,7 @@
 
 require 'nokogiri'
 require 'typhoeus'
+require 'net/http'
 require 'zlib'
 require_relative 'sitemap-parser/version'
 
@@ -110,9 +111,21 @@ class SitemapParser
     request = Typhoeus::Request.new(url, request_options)
 
     response = request.run
-    raise "HTTP request to #{url} failed with code #{response.code}." unless response.success?
+    if response.success?
+      inflate_body_if_needed(response)
+    else
+      uri = URI(url)
+      req = Net::HTTP::Get.new(uri)
+      req['User-Agent'] = options[:headers]['User-Agent'] if options[:headers]['User-Agent']
 
-    inflate_body_if_needed(response)
+      res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
+        http.request(req)
+      end
+
+      raise "HTTP request to #{url} failed with code #{res.code}." unless res.code.to_i == 200
+
+      res.body
+    end
   end
 
   def read_local_sitemap
