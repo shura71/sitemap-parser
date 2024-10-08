@@ -116,7 +116,7 @@ class SitemapParser
     else
       uri = URI(url)
       req = Net::HTTP::Get.new(uri)
-      req['User-Agent'] = options[:headers]['User-Agent'] if options[:headers]['User-Agent']
+      req['User-Agent'] = options[:headers]['User-Agent'] if options[:headers] && options[:headers]['User-Agent']
 
       res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
         http.request(req)
