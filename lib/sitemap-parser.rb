@@ -91,6 +91,8 @@ class SitemapParser
     return response.body unless DEFLATE_TYPE_REGEX.match?(response.headers['Content-type'])
 
     Zlib.gunzip(response.body)
+  rescue
+    response.body
   end
 
   def remote_sitemap?
