@@ -56,7 +56,7 @@ class SitemapParser
     urls = sitemapindex.search('sitemap')
     urls = filter_sitemap_urls(urls)
     urls.each do |sitemap|
-      child_sitemap_location = sitemap.at('loc').content
+      child_sitemap_location = sitemap.at('loc').content.strip
       found_urls << self.class.new(child_sitemap_location, recurse: @options[:recurse]).urls
     end
 
