@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'nokogiri'
+require 'typhoeus'
 require 'wreq'
 require 'zlib'
 require_relative 'sitemap-parser/version'
