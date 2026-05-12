@@ -117,13 +117,19 @@ class SitemapParser
       inflate_body_if_needed(response)
     else
       client = Wreq::Client.new(emulation: Wreq::Emulation.new(
-        device: Wreq::EmulationDevice::Chrome145,
-        os: Wreq::EmulationOS::MacOS,
+        device: [Wreq::EmulationDevice::Chrome145, Wreq::EmulationDevice::Edge145, Wreq::EmulationDevice::Firefox147, Wreq::EmulationDevice::Opera119].sample,
+        os: [Wreq::EmulationOS::MacOS, Wreq::EmulationOS::Windows].sample,
         skip_http2: false,
         skip_headers: false,
+        allow_redirects: true,
+        max_redirects: 5
       ))
       resp = client.get(url)
-      resp.text
+      if resp.code == 200
+        resp.text
+      else
+        ""
+      end
     end
   end
 
