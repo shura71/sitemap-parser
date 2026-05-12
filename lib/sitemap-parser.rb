@@ -122,7 +122,7 @@ class SitemapParser
         skip_http2: false,
         skip_headers: false,
       ))
-      resp = client.get(path)
+      resp = client.get(url)
       resp.text
     end
   end
