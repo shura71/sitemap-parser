@@ -116,7 +116,7 @@ class SitemapParser
     request = Typhoeus::Request.new(url, request_options)
 
     response = request.run
-    if response.success?
+    if response.success? && response.code == 200
       inflate_body_if_needed(response)
     else
       client = Wreq::Client.new(emulation: Wreq::Emulation.new(
