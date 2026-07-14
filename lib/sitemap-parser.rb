@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
-require 'typhoeus'
-require 'wreq'
-require 'zlib'
-require_relative 'sitemap-parser/version'
+require "nokogiri"
+require "typhoeus"
+require "wreq"
+require "zlib"
+require_relative "sitemap-parser/version"
 
 class SitemapParser
   attr_accessor :url, :options
@@ -15,7 +15,7 @@ class SitemapParser
     url_regex: nil
   }.freeze
 
-  DEFLATE_TYPE_REGEX = %r{application/((x-)?gzip|octet-stream)}.freeze
+  DEFLATE_TYPE_REGEX = %r{application/((x-)?gzip|octet-stream)}
 
   def initialize(url, opts = {})
     @url = url
@@ -32,20 +32,20 @@ class SitemapParser
 
   def urls
     @urls ||= if urlset
-                filter_sitemap_urls(urlset.search('url'))
-              elsif sitemapindex
-                options[:recurse] ? parse_sitemap_index : []
-              elsif raw_sitemap.strip.empty?
-                []
-              else
-                raise 'Malformed sitemap, no urlset or sitemapindex'
-              end
+      filter_sitemap_urls(urlset.search("url"))
+    elsif sitemapindex
+      options[:recurse] ? parse_sitemap_index : []
+    elsif raw_sitemap.strip.empty?
+      []
+    else
+      raise "Malformed sitemap, no urlset or sitemapindex"
+    end
   end
 
   def to_a
-    urls.map { |url| url.at('loc').content }
+    urls.map { |url| url.at("loc").content }
   rescue NoMethodError
-    raise 'Malformed sitemap, url without loc'
+    raise "Malformed sitemap, url without loc"
   end
 
   private
@@ -53,10 +53,10 @@ class SitemapParser
   def parse_sitemap_index
     found_urls = []
 
-    urls = sitemapindex.search('sitemap')
+    urls = sitemapindex.search("sitemap")
     urls = filter_sitemap_urls(urls)
     urls.each do |sitemap|
-      child_sitemap_location = sitemap.at('loc').content.strip
+      child_sitemap_location = sitemap.at("loc").content.strip
       found_urls << self.class.new(child_sitemap_location, recurse: @options[:recurse]).urls
     end
 
@@ -64,16 +64,16 @@ class SitemapParser
   end
 
   def urlset
-    @urlset ||= sitemap.at('urlset')
+    @urlset ||= sitemap.at("urlset")
   end
 
   def sitemapindex
-    @sitemapindex ||= sitemap.at('sitemapindex')
+    @sitemapindex ||= sitemap.at("sitemapindex")
   end
 
   def strip_whitespace(urls)
     urls.each do |url|
-      url.at('loc').content = url.at('loc').content.strip
+      url.at("loc").content = url.at("loc").content.strip
     end
 
     urls
@@ -83,12 +83,12 @@ class SitemapParser
     urls = strip_whitespace(urls)
     return urls if options[:url_regex].nil?
 
-    urls.select { |url| url.at('loc').content =~ options[:url_regex] }
+    urls.select { |url| url.at("loc").content =~ options[:url_regex] }
   end
 
   def inflate_body_if_needed(response)
     return response.body unless response.headers
-    return response.body unless DEFLATE_TYPE_REGEX.match?(response.headers['Content-type'])
+    return response.body unless DEFLATE_TYPE_REGEX.match?(response.headers["Content-type"])
 
     Zlib.gunzip(response.body)
   rescue
@@ -106,9 +106,12 @@ class SitemapParser
   def fetch_remote_sitemap
     return nil unless remote_sitemap?
 
-    request_options = options.dup.tap { |opts| opts.delete(:recurse); opts.delete(:url_regex) }
-    unless options[:headers] && options[:headers]['User-Agent']
-      request_options[:headers] = { 'User-Agent' => 'Sitemap-Parser' }
+    request_options = options.dup.tap { |opts|
+      opts.delete(:recurse)
+      opts.delete(:url_regex)
+    }
+    unless options[:headers] && options[:headers]["User-Agent"]
+      request_options[:headers] = {"User-Agent" => "Sitemap-Parser"}
     end
     request = Typhoeus::Request.new(url, request_options)
 
@@ -117,8 +120,8 @@ class SitemapParser
       inflate_body_if_needed(response)
     else
       client = Wreq::Client.new(emulation: Wreq::Emulation.new(
-        device: [Wreq::EmulationDevice::Chrome145, Wreq::EmulationDevice::Edge145, Wreq::EmulationDevice::Firefox147, Wreq::EmulationDevice::Opera119].sample,
-        os: [Wreq::EmulationOS::MacOS, Wreq::EmulationOS::Windows].sample,
+        device: [Wreq::Profile::Chrome145, Wreq::Profile::Edge145, Wreq::Profile::Firefox147, Wreq::Profile::Opera119].sample,
+        os: [Wreq::Platform::MacOS, Wreq::Platform::Windows].sample,
         skip_http2: false,
         skip_headers: false,
         allow_redirects: true,
@@ -136,6 +139,6 @@ class SitemapParser
   def read_local_sitemap
     return nil unless local_sitemap?
 
-    File.open(url, &:read)
+    File.read(url)
   end
 end
